@@ -28,10 +28,10 @@ func (cfg *apiConfig) handlerUploadThumbnail(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-
 	fmt.Println("uploading thumbnail for video", videoID, "by user", userID)
 
 	// TODO: implement the upload here
+	//this is going to take a minute, can I commit?
 
 	respondWithJSON(w, http.StatusOK, struct{}{})
 }
