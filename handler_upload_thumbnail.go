@@ -1,7 +1,9 @@
 package main
 
 import (
+	"encoding/base64"
 	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/bootdotdev/learn-file-storage-s3-golang-starter/internal/auth"
@@ -36,9 +38,43 @@ func (cfg *apiConfig) handlerUploadThumbnail(w http.ResponseWriter, r *http.Requ
 	file, header, err := r.FormFile("thumbnail")
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, "Unable to parse form file", err)
+		return
 	}
 
-	// see your notes to finish
+	defer file.Close()
 
-	respondWithJSON(w, http.StatusOK, struct{}{})
+	mediatype := header.Header.Get("Content-Type")
+	if mediatype == "" {
+		respondWithError(w, http.StatusBadRequest, "missing content-type for thumbnail", nil)
+		return
+	}
+
+	data, err := io.ReadAll(file)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Unable to read multifile", err)
+		return
+	}
+
+	b64data := base64.StdEncoding.EncodeToString(data)
+
+	video, err := cfg.db.GetVideo(videoID)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "no video found in database", err)
+		return
+	}
+
+	if video.UserID != userID {
+		respondWithError(w, http.StatusUnauthorized, "user unauthorized for video", err)
+		return
+	}
+
+	url := fmt.Sprintf("data:%s;base64,%s", mediatype, b64data)
+	video.ThumbnailURL = &url
+	err = cfg.db.UpdateVideo(video)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "unable to update database", err)
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, video)
 }
