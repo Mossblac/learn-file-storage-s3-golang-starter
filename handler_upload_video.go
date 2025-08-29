@@ -64,7 +64,7 @@ func (cfg *apiConfig) handlerUploadVideo(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	tempFile, err := os.CreateTemp("", "tubely-mp4 upload")
+	tempFile, err := os.CreateTemp("", "tubely-mp4_upload")
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "unable to create temp file", err)
 		return
@@ -85,15 +85,42 @@ func (cfg *apiConfig) handlerUploadVideo(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	aspectR, err := getVideoAspectRatio(tempFile.Name())
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "unable to read temp file for aspect ratio", err)
+		return
+	}
+
+	_, err = tempFile.Seek(0, io.SeekStart)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "unable to reset temp file pointer", err)
+		return
+	}
+
+	FastStartTempFile, err := processVideoForFastStart(tempFile.Name())
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "unable to process video for fast start", err)
+		return
+	}
+
+	FSfile, err := os.Open(FastStartTempFile)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "unable open processed file", err)
+		return
+	}
+
+	defer os.Remove(FSfile.Name())
+	defer FSfile.Close()
+
 	key := make([]byte, 32)
 	rand.Read(key)
 	randString := base64.RawURLEncoding.EncodeToString(key)
-	VideoKey := fmt.Sprintf("%v.mp4", randString)
+	VideoKey := fmt.Sprintf("%v/%v.mp4", aspectR, randString)
 
 	PutObjectParams := s3.PutObjectInput{
 		Bucket:      &cfg.s3Bucket,
 		Key:         &VideoKey,
-		Body:        tempFile,
+		Body:        FSfile,
 		ContentType: &mediatype,
 	}
 
