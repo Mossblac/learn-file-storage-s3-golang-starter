@@ -23,17 +23,18 @@ type VideoStream struct {
 			CleanEffects int `json:"clean_effects"`
 			Captions     int `json:"captions"`
 		} `json:"disposition,omitempty"`
-		Tags struct {
-			Language string `json:"language"`
-			Title    string `json:"title"`
-		} `json:"tags"`
-		SampleRate   string `json:"sample_rate,omitempty"`
-		Channels     int    `json:"channels,omitempty"`
-		Disposition0 struct {
-			Default      int `json:"default"`
-			CleanEffects int `json:"clean_effects"`
-		} `json:"disposition,omitempty"`
-	} `json:"streams"`
+		/*Tags struct {
+				Language string `json:"language"`
+				Title    string `json:"title"`
+			} `json:"tags"`
+			SampleRate   string `json:"sample_rate,omitempty"`
+			Channels     int    `json:"channels,omitempty"`
+			Disposition0 struct {
+				Default      int `json:"default"`
+				CleanEffects int `json:"clean_effects"`
+			} `json:"disposition,omitempty"`
+		} `json:"streams"`*/
+	}
 }
 
 func getVideoAspectRatio(filepath string) (string, error) {
