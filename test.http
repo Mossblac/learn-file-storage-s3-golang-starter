@@ -1,1 +1,3 @@
 POST http://localhost:8091/admin/reset
+
+//curl -X POST http://localhost:8091/api/users   -H "Content-Type: application/json"   -d '{"email": "admin@tubely.com", "password": "password"}'

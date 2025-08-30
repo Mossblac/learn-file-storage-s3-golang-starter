@@ -130,18 +130,14 @@ func (cfg *apiConfig) handlerUploadVideo(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	url := fmt.Sprintf("%v,%v", cfg.s3Bucket, VideoKey)
+	url := fmt.Sprintf("%v/%v", cfg.s3CfDistribution, VideoKey)
 	video.VideoURL = &url
 	err = cfg.db.UpdateVideo(video)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "unable to update video", err)
 		return
 	}
-	PSvideo, err := cfg.dbVideoToSignedVideo(video)
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "unable to presign video", err)
-		return
-	}
-	respondWithJSON(w, http.StatusOK, PSvideo)
+
+	respondWithJSON(w, http.StatusOK, video)
 
 }
